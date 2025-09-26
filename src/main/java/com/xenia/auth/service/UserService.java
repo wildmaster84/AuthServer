@@ -67,13 +67,12 @@ public class UserService {
     
     public Response<ObjectNode> getFriendsList(String onlineXuid, String requesterUsername) {
         try {
-            User user = userRepo.findByOnlineXuid(onlineXuid)
-                .orElseThrow(() -> new Exception("User not found"));
+        	User user = userRepo.findByOnlineXuid(onlineXuid).orElse(userRepo.findByOfflineXuid(onlineXuid).orElseThrow(() -> new Exception("User not found")));
             // If private and not owner, deny
             if (user.get("friendsPrivate").get("friendsPrivate").asBoolean() && !user.get("username").get("username").toString().equals(requesterUsername)) {
                 return Response.error("Friends list is private");
             }
-            return Response.success(user.get("friends", "username", "online_xuid"));
+            return Response.success(user.get("friends"));
         } catch (Exception e) {
             return Response.error(e.getMessage());
         }

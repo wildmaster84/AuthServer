@@ -69,7 +69,7 @@ public class AuthController {
         try {
             User user = userService.authenticate(username, password);
             String token = jwtUtil.generateToken(user, request.getRemoteAddr().toString());
-            return Response.success(Map.of("token", token, "username", user.get("username").get("username").asText()));
+            return Response.success(Map.of("token", token, "username", user.get("username").get("username").asText(), "xuid", user.get("offline_xuid").get("offline_xuid").asText()));
         } catch (Exception e) {
             return Response.error(e.getMessage());
         }
@@ -98,7 +98,7 @@ public class AuthController {
             	keyStore.remove(token);
             	return Response.error("Unauthorized");
             }
-            return Response.success(Map.of("token", hash, "username", username));
+            return Response.success(Map.of("token", hash, "username", username, "xuid", xuid));
         } catch (Exception e) {
             return Response.error("Invalid or expired token.");
         }
