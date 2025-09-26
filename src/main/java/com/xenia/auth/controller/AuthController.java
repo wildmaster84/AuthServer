@@ -23,10 +23,12 @@ import java.util.Map;
 public class AuthController {
     private final UserService userService;
     private final JwtUtil jwtUtil;
+    private final KeyStore keyStore;
 
-    public AuthController(UserService userService, JwtUtil jwtUtil) {
+    public AuthController(UserService userService, JwtUtil jwtUtil, KeyStore keyStore) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
+        this.keyStore = keyStore;
     }
 
     @PostMapping("/register")
@@ -79,7 +81,7 @@ public class AuthController {
             return Response.error("Missing required fields.");
         }
         try {
-        	String token = KeyStore.retrieve(hash);
+        	String token = keyStore.retrieve(hash);
             // Validate token and extract username
             String xuid = jwtUtil.extractClaims(token).get("offlineXuid").toString();
             String ip = jwtUtil.extractClaims(token).get("ip").toString();
@@ -93,7 +95,7 @@ public class AuthController {
             }
             if (!request.getRemoteAddr().toString().equalsIgnoreCase(ip) || !username.equalsIgnoreCase(user.get("username").get("username").asText())) {
             	// Revoke leaked session token
-            	KeyStore.remove(token);
+            	keyStore.remove(token);
             	return Response.error("Unauthorized");
             }
             return Response.success(Map.of("token", hash, "username", username));
@@ -127,7 +129,7 @@ public class AuthController {
     	}
         String requesterUsername = null;
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = KeyStore.retrieve(authHeader.substring(7));
+            String token = keyStore.retrieve(authHeader.substring(7));
             try {
                 requesterUsername = jwtUtil.extractClaims(token).getSubject();
             } catch (Exception ignored) {}

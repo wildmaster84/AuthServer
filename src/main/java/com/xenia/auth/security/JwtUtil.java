@@ -13,6 +13,11 @@ import java.util.Date;
 public class JwtUtil {
     private final String SECRET = "42C5877E844A110DEC2AE5AA9F189EB9E7ABCC8A15110F895DD6FAFE529293965EC19B2C7917C7892CB2ABC68BC2A8CC546F3AF79BA8BC9E758AF90663CF72A5E3A68B10BD2A6B0AC29843899347D77D57DAF46F991F4F7EFD1FE1FCB096D8CB852635A03154A30A3AFE4";
     private final long EXPIRATION = 1000 * 60 * 60 * 24; // 24h
+    private final KeyStore keyStore;
+
+    public JwtUtil(KeyStore keyStore) {
+        this.keyStore = keyStore;
+    }
 
     public String generateToken(User user, String ip) {
         String token = Jwts.builder()
@@ -25,7 +30,7 @@ public class JwtUtil {
                 .compact();
 
         // Store token in KeyStore and return 16-char key
-        return KeyStore.store(token);
+        return keyStore.store(token);
     }
 
     public Claims extractClaims(String token) {
@@ -37,20 +42,20 @@ public class JwtUtil {
     }
 
     public boolean validateToken(String key, String username) {
-        String token = KeyStore.retrieve(key);
+        String token = keyStore.retrieve(key);
         if (token == null) return false;
 
-        final String user = extractClaims(key).getSubject();
+        final String user = extractClaims(token).getSubject();
         return (user.equals(username) && !isTokenExpired(key));
     }
 
     public boolean isTokenExpired(String key) {
-        String token = KeyStore.retrieve(key);
+        String token = keyStore.retrieve(key);
         if (token == null) return true;
 
-        final Date expiration = extractClaims(key).getExpiration();
+        final Date expiration = extractClaims(token).getExpiration();
         boolean expired = expiration.before(new Date());
-        if (expired) KeyStore.remove(key);
+        if (expired) keyStore.remove(key);
         return expired;
     }
 }

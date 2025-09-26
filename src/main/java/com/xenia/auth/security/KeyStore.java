@@ -1,15 +1,22 @@
 package com.xenia.auth.security;
 
-import java.security.SecureRandom;
-import java.util.HashMap;
-import java.util.Map;
+import com.xenia.auth.model.KeyEntry;
+import com.xenia.auth.repository.KeyStoreRepository;
+import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
+
+@Service
 public class KeyStore {
-    private static final Map<String, String> lookup = new HashMap<>();
+    private final KeyStoreRepository keyStoreRepository;
     private static final SecureRandom random = new SecureRandom();
     private static final String ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-    private static String generateKey(int length) {
+    public KeyStore(KeyStoreRepository keyStoreRepository) {
+        this.keyStoreRepository = keyStoreRepository;
+    }
+
+    private String generateKey(int length) {
         StringBuilder sb = new StringBuilder(length);
         for (int i = 0; i < length; i++) {
             sb.append(ALPHABET.charAt(random.nextInt(ALPHABET.length())));
@@ -17,20 +24,24 @@ public class KeyStore {
         return sb.toString();
     }
 
-    public static String store(String value) {
+    public String store(String value) {
         String key;
         do {
             key = generateKey(16); // fixed 16-char key
-        } while (lookup.containsKey(key));
-        lookup.put(key, value);
+        } while (keyStoreRepository.findByKey(key).isPresent());
+        
+        KeyEntry keyEntry = new KeyEntry(key, value);
+        keyStoreRepository.save(keyEntry);
         return key;
     }
 
-    public static String retrieve(String key) {
-        return lookup.get(key);
+    public String retrieve(String key) {
+        return keyStoreRepository.findByKey(key)
+                .map(KeyEntry::getValue)
+                .orElse(null);
     }
 
-    public static void remove(String key) {
-        lookup.remove(key);
+    public void remove(String key) {
+        keyStoreRepository.findByKey(key).ifPresent(keyStoreRepository::delete);
     }
 }
