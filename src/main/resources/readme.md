@@ -252,4 +252,4 @@ curl -H "Authorization: Bearer <TOKEN>" "https://network.rushhosting.net:10134/a
 
 ---
 
-For questions, open an issue or see the source code in [`wildmaster84/Xenia-WebServices`](https://github.com/wildmaster84/Xenia-WebServices).
+For questions, open an issue or see the source code in [`wildmaster84/AuthServer`](https://github.com/wildmaster84/AuthServer).
